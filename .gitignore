@@ -1,0 +1,4 @@
+*.vscode
+*.parquet
+*.json
+parquet_format
