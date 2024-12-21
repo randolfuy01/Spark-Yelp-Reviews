@@ -84,6 +84,6 @@ The dataset is sourced from [Kaggle](https://www.kaggle.com/datasets/yelp-datase
    ```bash
    git clone https://github.com/your-username/Spark-Yelp-Reviews.git
    cd Spark-Yelp-Reviews
-2. **Install dependencies
+2. **Install dependencies:**
     ``` bash
     pip3 install -r requirements
