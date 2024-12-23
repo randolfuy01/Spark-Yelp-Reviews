@@ -1,4 +1,3 @@
-"""
 # **Spark-Yelp-Reviews**
 
 Logistic and Random Forest Regression on Yelp Data using Apache Spark
@@ -84,6 +83,16 @@ The dataset is sourced from [Kaggle](https://www.kaggle.com/datasets/yelp-datase
    ```bash
    git clone https://github.com/your-username/Spark-Yelp-Reviews.git
    cd Spark-Yelp-Reviews
-2. **Install dependencies
+2. **Install dependencies:**
     ``` bash
     pip3 install -r requirements
+3. **Download dataset:**
+   Ensure that data is in the raw_format directory
+   ``` bash
+   #!/bin/bash
+   curl -L -o ~/Downloads/yelp-dataset.zip\
+   https://www.kaggle.com/api/v1/datasets/download/yelp-dataset/yelp-dataset
+5. **Run data preprocessing:**
+   ``` bash
+   python3 /data/data_preprocessing.py
+6. **Ready to go!**
