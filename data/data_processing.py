@@ -42,7 +42,7 @@ def main():
         dataframe.coalesce(1).write.mode("overwrite").parquet(output_path)
 
         # Find and move the single Parquet file to a desired location
-        for root, dirs, files in os.walk(output_path):
+        for root, files in os.walk(output_path):
             for file in files:
                 if file.endswith(".parquet"):
                     shutil.move(os.path.join(root, file), f"{output_path}.parquet")
