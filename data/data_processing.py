@@ -9,27 +9,34 @@
             is by leveraging Apache spark (pyspark) for SQL queries to clean data
 
 """
+
 from pyspark.sql import SparkSession
 import os
 import shutil
 
+
 def main():
 
     # Initialize the SparkSession with necessary configurations
-    spark: SparkSession.builder = SparkSession.builder \
-        .config("spark.executor.memory", "6g") \
-        .config("spark.driver.memory", "6g") \
-        .config("spark.memory.offHeap.enabled", "true") \
-        .config("spark.memory.offHeap.size", "4g") \
-        .config("spark.executor.extraJavaOptions", "-XX:+UseG1GC") \
-        .config("spark.driver.extraJavaOptions", "-XX:+UseG1GC") \
+    spark: SparkSession.builder = (
+        SparkSession.builder.config("spark.executor.memory", "6g")
+        .config("spark.driver.memory", "6g")
+        .config("spark.memory.offHeap.enabled", "true")
+        .config("spark.memory.offHeap.size", "4g")
+        .config("spark.executor.extraJavaOptions", "-XX:+UseG1GC")
+        .config("spark.driver.extraJavaOptions", "-XX:+UseG1GC")
         .getOrCreate()
+    )
 
-    file_paths = ["./raw_format/yelp_academic_dataset_tip.json", "./raw_format/yelp_academic_dataset_review.json",
-                   "./raw_format/yelp_academic_dataset_business.json", "./raw_format/yelp_academic_dataset_checkin.json",
-                   "./raw_format/yelp_academic_dataset_user.json"
-                ]
-    
+    file_paths = [
+        "./raw_format/yelp_academic_dataset_tip.json",
+        "./raw_format/yelp_academic_dataset_review.json",
+        "./raw_format/yelp_academic_dataset_business.json",
+        "./raw_format/yelp_academic_dataset_checkin.json",
+        "./raw_format/yelp_academic_dataset_user.json",
+    ]
+
+    print("Data preprocessing script")
     for path in file_paths:
         dataframe = spark.read.json(path)
         # Get the file name (without the directory) to use in the output path
@@ -48,6 +55,10 @@ def main():
                     shutil.move(os.path.join(root, file), f"{output_path}.parquet")
 
         shutil.rmtree(output_path)
+        print(f"Finished processing {file_name}.json")
+
+    print("Data preprocessing complete")
+
 
 if __name__ == "__main__":
     main()
