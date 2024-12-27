@@ -1,11 +1,10 @@
-import torch.nn as nn
-import torch
-
 """
 -------------------------------------------------------------------------
 Transformer Implementation based on the "Attention is All You Need Paper"
 -------------------------------------------------------------------------
 """
+import torch.nn as nn
+import torch
 
 class SelfAttention(nn.Module):
     """

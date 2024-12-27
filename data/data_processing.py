@@ -1,33 +1,35 @@
-""" 
-    Data preprocessing for the yelp data initial conversion from json formatted data into parquet
-    Things taken into consideration:
-
-        - Dataset is as json data, we want to shrink the data by turning it into 
-            csv format and saving that locally instead
-
-        - Large data amounts makes it so that the preferred method of extracting data
-            is by leveraging Apache spark (pyspark) for SQL queries to clean data
-
+"""
+    Data preprocessing for the Yelp data: initial conversion from JSON to Parquet format.
+    Considerations:
+        - Convert large JSON datasets into Parquet for efficient storage and processing.
+        - Leverage Apache Spark for handling large datasets with SQL-style operations.
 """
 
 from pyspark.sql import SparkSession
 import os
-import shutil
+import logging
+
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def main():
-
-    # Initialize the SparkSession with necessary configurations
-    spark: SparkSession.builder = (
-        SparkSession.builder.config("spark.executor.memory", "6g")
+    # Initialize the SparkSession
+    spark = (
+        SparkSession.builder.appName("Yelp Data Preprocessing")
+        .config("spark.executor.memory", "6g")
         .config("spark.driver.memory", "6g")
         .config("spark.memory.offHeap.enabled", "true")
         .config("spark.memory.offHeap.size", "4g")
         .config("spark.executor.extraJavaOptions", "-XX:+UseG1GC")
         .config("spark.driver.extraJavaOptions", "-XX:+UseG1GC")
+        .config("spark.sql.files.maxPartitionBytes", "128MB")
         .getOrCreate()
     )
 
+    # File paths to process
     file_paths = [
         "./raw_format/yelp_academic_dataset_tip.json",
         "./raw_format/yelp_academic_dataset_review.json",
@@ -36,28 +38,33 @@ def main():
         "./raw_format/yelp_academic_dataset_user.json",
     ]
 
-    print("Data preprocessing script")
+    logger.info("Starting Yelp data preprocessing script.")
+
     for path in file_paths:
-        dataframe = spark.read.json(path)
-        # Get the file name (without the directory) to use in the output path
-        file_name = path.split("/")[-1].replace(".json", "")
+        if not os.path.exists(path):
+            logger.warning(f"File {path} does not exist. Skipping...")
+            continue
 
-        # Define the output Parquet path using the file name
-        output_path = f"./parquet_format/{file_name}"
+        try:
+            logger.info(f"Processing file: {path}")
 
-        # Write the DataFrame as a Parquet file
-        dataframe.coalesce(1).write.mode("overwrite").parquet(output_path)
+            # Read JSON file into a DataFrame
+            dataframe = spark.read.json(path)
+            record_count = dataframe.count()
+            logger.info(f"Loaded {record_count} records from {path}")
 
-        # Find and move the single Parquet file to a desired location
-        for root, files in os.walk(output_path):
-            for file in files:
-                if file.endswith(".parquet"):
-                    shutil.move(os.path.join(root, file), f"{output_path}.parquet")
+            # Generate output path
+            file_name = os.path.basename(path).replace(".json", "")
+            output_path = f"./parquet_format/{file_name}.parquet"
 
-        shutil.rmtree(output_path)
-        print(f"Finished processing {file_name}.json")
+            # Write the DataFrame as a Parquet file
+            dataframe.write.mode("overwrite").parquet(output_path)
+            logger.info(f"Finished writing Parquet file to {output_path}")
 
-    print("Data preprocessing complete")
+        except Exception as e:
+            logger.error(f"Failed to process file {path}: {e}", exc_info=True)
+
+    logger.info("Data preprocessing complete.")
 
 
 if __name__ == "__main__":

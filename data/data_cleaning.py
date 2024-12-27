@@ -1,19 +1,26 @@
-""" 
+"""
     Parquet loaded data aggregation and assimilation
-        - Restaurant information is most important for determining success rate
-        - Remove unnecessary tags
-        - Concatenate necessary fields 
+    - Focus on restaurant-related data for Yelp reviews.
+    - Clean and prepare the data for further analysis or model training.
 """
 
 from pyspark.sql import SparkSession
+import os
+import logging
+import shutil
 
 
 def main():
+    # Configure logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
 
-    print("Data cleaning script")
-    # Initialize the SparkSession with necessary configurations (adjust as needed)
-    spark: SparkSession.builder = (
-        SparkSession.builder.config("spark.executor.memory", "4g")
+    logger.info("Starting data cleaning script")
+
+    # Initialize the SparkSession
+    spark = (
+        SparkSession.builder.appName("Yelp Data Cleaning")
+        .config("spark.executor.memory", "4g")
         .config("spark.driver.memory", "4g")
         .config("spark.memory.offHeap.enabled", "true")
         .config("spark.memory.offHeap.size", "4g")
@@ -24,52 +31,58 @@ def main():
         .getOrCreate()
     )
 
-    # Load the necessary parquet files
-    print("Loading parquet files")
-    business_df = spark.read.parquet("./data/parquet_format/business.parquet")
-    review_df = spark.read.parquet(
-        "./data/parquet_format/yelp_academic_dataset_review.parquet"
-    )
+    # Load the Parquet files
+    try:
+        logger.info("Loading Parquet files")
+        business_df = spark.read.parquet("./data/parquet_format/business.parquet")
+        review_df = spark.read.parquet(
+            "./data/parquet_format/yelp_academic_dataset_review.parquet"
+        )
+    except Exception as e:
+        logger.error(f"Failed to load Parquet files: {e}")
+        return
 
-    # Filter out the necessary columns
-    print("Filtering out necessary columns")
+    # Filter and clean data
+    logger.info("Filtering business data")
     business_df = business_df.select(
         "business_id", "name", "review_count", "attributes", "categories"
     )
     review_df = review_df.select("business_id", "stars", "text")
 
-    print("Joining dataframes")
+    # Query for restaurant-related businesses
+    logger.info("Filtering for restaurants and food-related businesses")
     business_df.createOrReplaceTempView("business")
     business_df = spark.sql(
         """
-    SELECT business_id, name, review_count, attributes, categories
-    FROM business
-    WHERE categories LIKE '%Restaurant%' OR categories LIKE '%Food%'
-    """
+        SELECT business_id, name, review_count
+        FROM business
+        WHERE LOWER(categories) LIKE '%restaurant%' OR LOWER(categories) LIKE '%food%'
+        """
     )
 
-    business_df = business_df.drop("categories").drop("attributes")
-
-    # Join dataframes
+    # Join DataFrames
+    logger.info("Joining business and review data")
     joined_df = business_df.join(review_df, "business_id", "inner").select(
         "name", "stars", "text"
     )
 
-    # Drop rows where any of the values are null
-    joined_df = joined_df.filter(
-        joined_df.name.isNotNull()
-        & joined_df.stars.isNotNull()
-        & joined_df.text.isNotNull()
-    )
+    # Drop null values
+    logger.info("Dropping rows with null values")
+    joined_df = joined_df.dropna()
 
+    # Count rows saved
     rows_saved = joined_df.count()
-    print(f"Rows saved: {rows_saved}")
+    logger.info(f"Rows saved: {rows_saved}")
 
-    # Save to CSV in chunks
-    print("Saving to CSV")
-    joined_df.write.csv("./data/csv_format/joined_data", header=True)
+    # Save to CSV
+    output_path = "./data/csv_format/joined_data"
+    if os.path.exists(output_path):
+        shutil.rmtree(output_path)
 
-    print("Data cleaning complete")
+    logger.info("Saving to CSV")
+    joined_df.repartition(1).write.csv(output_path, header=True)
+
+    logger.info("Data cleaning complete")
 
 
 if __name__ == "__main__":
