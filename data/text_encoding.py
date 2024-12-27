@@ -3,6 +3,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import udf
 from pyspark.sql.types import ArrayType, IntegerType
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
