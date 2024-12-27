@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 # Initialize the tokenizer
 tokenizer = AutoTokenizer.from_pretrained("allenai/longformer-base-4096", use_fast=True)
 
+
 @udf(ArrayType(IntegerType()))
 def tokenize(text):
     """
@@ -19,11 +20,14 @@ def tokenize(text):
     """
     try:
         if text:
-            return tokenizer.encode(text, add_special_tokens=True, truncation=True, max_length=4096)
+            return tokenizer.encode(
+                text, add_special_tokens=True, truncation=True, max_length=4096
+            )
         return []
     except Exception as e:
         logger.error(f"Error tokenizing text: {text}, Error: {e}")
         return []
+
 
 def main():
     logger.info("Text encoding script started.")
@@ -62,7 +66,9 @@ def main():
     data_frame = data_frame.cache()
     if data_frame.count() > 0:
         logger.info(f"Sample text: {data_frame.select('text').first()}")
-        logger.info(f"Sample tokenized text: {data_frame.select('tokenized_text').first()}")
+        logger.info(
+            f"Sample tokenized text: {data_frame.select('tokenized_text').first()}"
+        )
     else:
         logger.warning("No data available in the DataFrame.")
 
@@ -76,6 +82,7 @@ def main():
     data_frame.write.parquet(output_path, mode="overwrite")
 
     logger.info("Text encoding and saving complete.")
+
 
 if __name__ == "__main__":
     main()
