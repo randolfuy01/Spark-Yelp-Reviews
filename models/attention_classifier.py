@@ -3,9 +3,11 @@
 Classification Model based on the attention transformer
 -------------------------------------------------------------------------
 """
+
 import torch.nn as nn
 import torch
 from attention_transformer import SelfAttention, Transformer, Encoder
+
 
 class TransformerForClassification(nn.Module):
     """

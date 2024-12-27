@@ -3,8 +3,10 @@
 Transformer Implementation based on the "Attention is All You Need Paper"
 -------------------------------------------------------------------------
 """
+
 import torch.nn as nn
 import torch
+
 
 class SelfAttention(nn.Module):
     """
@@ -79,9 +81,6 @@ class SelfAttention(nn.Module):
 
         out = self.fc_out(out)
         return out
-
-
-
 
 
 class TransformerBlock(nn.Module):
@@ -193,9 +192,6 @@ class Encoder(nn.Module):
         return out
 
 
-
-
-
 class DecoderBlock(nn.Module):
     """
     Implements a single Decoder block with self-attention, cross-attention,
@@ -235,9 +231,6 @@ class DecoderBlock(nn.Module):
         query = self.dropout(self.norm(attention + x))
         out = self.transformer_block(value, key, query, src_mask)
         return out
-
-
-
 
 
 class Decoder(nn.Module):
@@ -302,9 +295,6 @@ class Decoder(nn.Module):
         out = self.fc_out(x)
 
         return out
-
-
-
 
 
 class Transformer(nn.Module):
