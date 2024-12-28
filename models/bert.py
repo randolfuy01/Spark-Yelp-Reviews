@@ -16,7 +16,7 @@ class ReviewTransformerClassifier(nn.Module):
         self.dropout = nn.Dropout(0.3)
         self.fc = nn.Linear(
             self.bert.config.hidden_size, num_classes
-        )  # Map to star ratings
+        )
 
     def forward(self, input_texts):
         """
