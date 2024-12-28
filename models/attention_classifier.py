@@ -1,12 +1,58 @@
 """
--------------------------------------------------------------------------
-Classification Model based on the attention transformer
--------------------------------------------------------------------------
+File: attention_classifier.py
+
+Description:
+    This file implements a text classification model based on the Transformer architecture. 
+    The model combines an Encoder module with a classification head to process tokenized 
+    text sequences and output class probabilities. It leverages attention mechanisms 
+    to capture contextual relationships in the input data.
+
+Structure:
+    - TransformerForClassification: A PyTorch module that integrates:
+        1. An Encoder (from the `attention_transformer` module) for sequence representation.
+        2. A fully connected classification head for generating class predictions.
+    - Methods:
+        1. make_src_mask: Creates a mask to ignore padding tokens in the source input.
+        2. forward: Defines the forward pass through the Transformer model.
+
+Usage:
+    - Initialize the `TransformerForClassification` class with desired parameters, 
+      such as vocabulary size, embedding size, number of layers, etc.
+    - Use the `forward` method to process input tensors and generate output logits.
+
+Attributes:
+    - Encoder: Handles the attention-based encoding of input sequences.
+    - Fully Connected Layer: Maps the encoded sequence representation to class probabilities.
+
+Requirements:
+    - PyTorch (torch, torch.nn)
+    - Custom `Encoder` module from `attention_transformer`.
+
+Key Features:
+    - Attention-based sequence encoding with a Transformer architecture.
+    - Global average pooling for sequence aggregation.
+    - Flexible configuration options, including embedding size, attention heads, and dropout.
+
+How to Use:
+    1. Import the `TransformerForClassification` class.
+    2. Initialize the model with the required parameters.
+    3. Pass tokenized input sequences through the `forward` method to obtain predictions.
+
+Example:
+    from transformer_classification import TransformerForClassification
+
+    model = TransformerForClassification(
+        src_vocab_size=10000,
+        src_pad_idx=0,
+        num_classes=5,
+        device="cuda"
+    )
+    src = torch.randint(0, 10000, (32, 100))  # Example input tensor
+    logits = model(src)  # Output logits for classification
 """
 
 import torch.nn as nn
-import torch
-from attention_transformer import SelfAttention, Transformer, Encoder
+from attention_transformer import Encoder
 
 
 class TransformerForClassification(nn.Module):
@@ -82,3 +128,4 @@ class TransformerForClassification(nn.Module):
         enc_src = enc_src.mean(dim=1)
         out = self.fc_out(enc_src)
         return out
+    
