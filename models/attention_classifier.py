@@ -182,8 +182,8 @@ def loader(load_path: str, sample_size: int, max_length: int, batch_size: int, s
 
     # Convert label column to integer
     pandas_data["label"] = (
-        pd.to_numeric(pandas_data["label"], errors="coerce")  # from str -> float
-        .astype(int)                                          # from float -> int
+        pd.to_numeric(pandas_data["label"], errors="coerce")  
+        .astype(int)                                          
     )
 
     pandas_data["label"] = pandas_data["label"] - 1
@@ -217,6 +217,7 @@ def loader(load_path: str, sample_size: int, max_length: int, batch_size: int, s
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
+    spark.stop()
     return train_loader, test_loader
 
 
@@ -318,16 +319,25 @@ def train_model(
 
 
 def main():
+
     # Device selection
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    src_pad_idx = 0  # Set padding index used in your data
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
+
+    logger.info(f"Using device: {device}")
+
+    src_pad_idx = 0 
 
     # Hyperparameters
     data_path = "../data/encoded_format/encoded_data.parquet"
-    sample_size = 10000      # Number of samples per rating
-    max_length = 1200        # Matches model's max_length
+    sample_size = 20000
+    max_length = 1200
     batch_size = 32
-    epochs = 10
+    epochs = 5
     lr = 1e-4
 
     train_loader, test_loader = loader(
@@ -339,7 +349,7 @@ def main():
     )
 
     # Because the loader returns DataLoaders, we can access the underlying Dataset.
-    train_dataset = train_loader.dataset  # EncodedTextDataset
+    train_dataset = train_loader.dataset 
     test_dataset = test_loader.dataset
 
     # Find the maximum token ID in both training and testing sets
@@ -357,7 +367,7 @@ def main():
         num_layers=6,
         forward_expansion=4,
         heads=8,
-        dropout=0.1,
+        dropout=0.2,
         max_length=max_length,  
         num_classes=5,        
         device=device,
@@ -372,6 +382,8 @@ def main():
         lr=lr,
         src_pad_idx=src_pad_idx,
     )
+    
+    torch.save(model.state_dict(), "./attention_classifier")
 
 if __name__ == "__main__":
     main()

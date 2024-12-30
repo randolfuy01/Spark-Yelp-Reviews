@@ -35,13 +35,13 @@ def main():
     # Initialize SparkSession
     spark = (
         SparkSession.builder.appName("Text Encoder")
-        .config("spark.executor.memory", "4g")
-        .config("spark.driver.memory", "4g")
+        .config("spark.executor.memory", "8g")
+        .config("spark.driver.memory", "8g")
         .config("spark.memory.offHeap.enabled", "true")
-        .config("spark.memory.offHeap.size", "4g")
+        .config("spark.memory.offHeap.size", "8g")
         .config("spark.executor.extraJavaOptions", "-XX:+UseG1GC")
         .config("spark.driver.extraJavaOptions", "-XX:+UseG1GC")
-        .config("spark.driver.maxResultSize", "2g")
+        .config("spark.driver.maxResultSize", "6g")
         .config("spark.sql.shuffle.partitions", "8")
         .getOrCreate()
     )

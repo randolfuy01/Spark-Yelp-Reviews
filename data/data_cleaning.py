@@ -49,21 +49,20 @@ def main():
     )
     review_df = review_df.select("business_id", "stars", "text")
 
-    # Query for restaurant-related businesses
+    # Query
     logger.info("Filtering for restaurants and food-related businesses")
     business_df.createOrReplaceTempView("business")
     business_df = spark.sql(
         """
-        SELECT business_id, name, review_count
+        SELECT business_id
         FROM business
-        WHERE LOWER(categories) LIKE '%restaurant%' OR LOWER(categories) LIKE '%food%'
         """
     )
 
     # Join DataFrames
     logger.info("Joining business and review data")
     joined_df = business_df.join(review_df, "business_id", "inner").select(
-        "name", "stars", "text"
+        "business_id", "stars", "text"
     )
 
     # Drop null values
